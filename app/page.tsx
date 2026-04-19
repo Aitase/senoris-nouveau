@@ -15,9 +15,12 @@ export default function Home() {
   ];
 
   // --- Contact form state ---
-  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [newsletterStatus, setNewsletterStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [newsletterError, setNewsletterError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,10 +35,33 @@ export default function Home() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
       setStatus('success');
-      setFormData({ name: '', email: '', message: '' });
+      setFormData({ name: '', email: '', subject: '', message: '' });
     } catch (err: unknown) {
       setStatus('error');
       setErrorMsg(err instanceof Error ? err.message : 'Erreur inconnue');
+    }
+  };
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNewsletterStatus('loading');
+    setNewsletterError('');
+
+    try {
+      const res = await fetch('/api/newsletter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: newsletterEmail }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
+
+      setNewsletterStatus('success');
+      setNewsletterEmail('');
+    } catch (err: unknown) {
+      setNewsletterStatus('error');
+      setNewsletterError(err instanceof Error ? err.message : 'Erreur inconnue');
     }
   };
 
@@ -544,6 +570,18 @@ export default function Home() {
                   </div>
 
                   <div className="form-group">
+                    <label className="form-label">Sujet</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Objet de votre demande"
+                      value={formData.subject}
+                      onChange={e => setFormData(p => ({ ...p, subject: e.target.value }))}
+                      required
+                    />
+                  </div>
+
+                  <div className="form-group">
                     <label className="form-label">Votre Message</label>
                     <textarea
                       className="form-input"
@@ -558,7 +596,11 @@ export default function Home() {
                   {/* Success message */}
                   {status === 'success' && (
                     <div style={{ background: 'rgba(139,90,43,0.08)', border: '1px solid var(--accent-main)', borderRadius: '12px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ fontSize: '1.4rem' }}>✅</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-main)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M20 6 9 17l-5-5"></path>
+                        </svg>
+                      </span>
                       <div>
                         <p style={{ margin: 0, fontWeight: 700, color: 'var(--accent-main)', fontSize: '0.9rem' }}>Message envoyé avec succès !</p>
                         <p style={{ margin: '4px 0 0', fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Nous vous répondrons dans les meilleurs délais.</p>
@@ -569,7 +611,13 @@ export default function Home() {
                   {/* Error message */}
                   {status === 'error' && (
                     <div style={{ background: 'rgba(220,38,38,0.06)', border: '1px solid rgba(220,38,38,0.3)', borderRadius: '12px', padding: '16px 20px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                      <span style={{ fontSize: '1.4rem' }}>⚠️</span>
+                      <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M12 9v4"></path>
+                          <path d="M12 17h.01"></path>
+                          <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.72 3h16.92a2 2 0 0 0 1.72-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                        </svg>
+                      </span>
                       <p style={{ margin: 0, color: '#dc2626', fontSize: '0.85rem', fontWeight: 600 }}>{errorMsg}</p>
                     </div>
                   )}
@@ -580,7 +628,7 @@ export default function Home() {
                     disabled={status === 'loading'}
                     style={{ width: '100%', padding: '16px', fontSize: '0.9rem', border: 'none', opacity: status === 'loading' ? 0.7 : 1, cursor: status === 'loading' ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease' }}
                   >
-                    {status === 'loading' ? '⏳ Envoi en cours...' : 'Envoyer le message ↗'}
+                    {status === 'loading' ? 'Envoi en cours...' : 'Envoyer le message ↗'}
                   </button>
                 </form>
               </div>
@@ -603,13 +651,6 @@ export default function Home() {
               <p style={{ opacity: 0.6, fontSize: '0.85rem', lineHeight: '1.8', marginBottom: '20px' }}>
                 Spécialistes de la transformation digitale et de la cybersécurité avancée au Sénégal.
               </p>
-              <a href="https://wa.me/221774830501" target="_blank" rel="noreferrer"
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', padding: '10px 20px', background: '#25D366', borderRadius: '100px', color: '#fff', textDecoration: 'none', fontWeight: 700, fontSize: '0.85rem', transition: 'transform 0.2s' }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'translateY(0)'; }}>
-                <svg width="16" height="16" viewBox="0 0 32 32" fill="#ffffff"><path d="M16 0C7.164 0 0 7.163 0 16c0 2.822.736 5.469 2.027 7.773L0 32l8.436-2.012A15.938 15.938 0 0 0 16 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm8.078 22.531c-.338.95-1.964 1.813-2.694 1.926-.73.113-1.633.16-2.636-.165a24.09 24.09 0 0 1-2.387-.883C12.5 21.86 9.688 18.75 9.25 18.188c-.438-.563-1.5-1.938-1.5-3.626 0-1.687.875-2.5 1.188-2.875.312-.375.687-.469.916-.469.23 0 .459.002.66.01.212.01.496-.08.776.594.287.687.975 2.375 1.06 2.55.087.175.145.375.029.594-.116.218-.174.354-.347.543-.174.188-.366.42-.521.563-.174.162-.355.337-.153.662.203.325.9 1.488 1.934 2.41 1.328 1.188 2.45 1.556 2.775 1.73.325.175.515.144.706-.087.188-.232.806-.944 1.022-1.269.215-.325.43-.27.72-.162.29.107 1.838.869 2.15 1.025.314.157.523.237.6.369.077.131.077.756-.261 1.706z" /></svg>
-                WhatsApp Direct
-              </a>
             </div>
 
             {/* Navigation */}
@@ -628,9 +669,26 @@ export default function Home() {
             <div className="reveal reveal-delay-1">
               <h4 style={{ fontSize: '1rem', fontWeight: 800, marginBottom: '20px', color: 'var(--accent-gold)' }}>Contact</h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.85rem', opacity: 0.7 }}>
-                <div>📍 Dakar, Sénégal </div>
-                <div>✉️ <a href="mailto:Senoris2026@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>Senoris2026@gmail.com</a></div>
-                <div>📱 <a href="https://wa.me/221774830501" style={{ color: 'inherit', textDecoration: 'none' }}>+221 77 483 05 01</a></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  <span>Dakar, Sénégal</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="4" width="20" height="16" rx="2"></rect>
+                    <polyline points="22,7 12,13 2,7"></polyline>
+                  </svg>
+                  <a href="mailto:Senoris2026@gmail.com" style={{ color: 'inherit', textDecoration: 'none' }}>Senoris2026@gmail.com</a>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.86 19.86 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6A19.86 19.86 0 0 1 2.12 4.18 2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.12.9.33 1.78.63 2.63a2 2 0 0 1-.45 2.11L8 9.91a16 16 0 0 0 6.09 6.09l1.45-1.29a2 2 0 0 1 2.11-.45c.85.3 1.73.51 2.63.63A2 2 0 0 1 22 16.92z"></path>
+                  </svg>
+                  <a href="https://wa.me/221774830501" style={{ color: 'inherit', textDecoration: 'none' }}>+221 77 483 05 01</a>
+                </div>
               </div>
             </div>
 
@@ -654,9 +712,101 @@ export default function Home() {
             </div>
 
           </div>
+          <div
+            className="reveal"
+            style={{
+              marginTop: '12px',
+              marginBottom: '34px',
+              padding: '22px',
+              borderRadius: '24px',
+              border: '1px solid rgba(255,255,255,0.12)',
+              background: 'rgba(0,0,0,0.2)',
+              maxWidth: '470px',
+              marginLeft: 'auto',
+            }}
+          >
+            <p
+              style={{
+                margin: 0,
+                marginBottom: '16px',
+                color: '#ffffff',
+                fontSize: '1.05rem',
+                fontWeight: 900,
+                letterSpacing: '2px',
+                textTransform: 'uppercase',
+              }}
+            >
+              S&apos;abonner à la newsletter
+            </p>
+            <p style={{ margin: 0, color: 'rgba(253,250,247,0.75)', fontSize: '0.95rem', lineHeight: 1.5 }}>
+              Restez informé de nos dernières innovations et actualités tech.
+            </p>
+
+            <form
+              onSubmit={handleNewsletterSubmit}
+              style={{
+                marginTop: '16px',
+                display: 'flex',
+                gap: '10px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.14)',
+                borderRadius: '16px',
+                padding: '6px',
+                flexWrap: 'wrap',
+              }}
+            >
+              <input
+                type="email"
+                placeholder="Votre adresse email"
+                className="form-input"
+                value={newsletterEmail}
+                onChange={(e) => setNewsletterEmail(e.target.value)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--bg-cream)',
+                  boxShadow: 'none',
+                  flex: '1 1 250px',
+                  minWidth: '200px',
+                  padding: '14px 18px',
+                }}
+                required
+              />
+              <button
+                type="submit"
+                disabled={newsletterStatus === 'loading'}
+                style={{
+                  background: '#e3bf41',
+                  color: '#1f1a0f',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: 800,
+                  fontSize: '1.05rem',
+                  padding: '12px 22px',
+                  cursor: newsletterStatus === 'loading' ? 'not-allowed' : 'pointer',
+                  opacity: newsletterStatus === 'loading' ? 0.75 : 1,
+                  minWidth: '130px',
+                }}
+              >
+                {newsletterStatus === 'loading' ? 'En cours...' : 'S\u2019abonner'}
+              </button>
+            </form>
+
+            {newsletterStatus === 'success' && (
+              <p style={{ margin: '10px 0 0', color: '#9ee6b8', fontSize: '0.82rem', fontWeight: 700 }}>
+                Inscription confirmée.
+              </p>
+            )}
+            {newsletterStatus === 'error' && (
+              <p style={{ margin: '10px 0 0', color: '#ff9d9d', fontSize: '0.82rem', fontWeight: 700 }}>
+                {newsletterError}
+              </p>
+            )}
+          </div>
+
           <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px', fontSize: '0.8rem', opacity: 0.4 }}>
             <div>© 2026 Senoris Group. Dakar, Sénégal.</div>
-            <div>Conçu avec passion 🤎 pour l'Afrique</div>
+            <div>Conçu avec passion pour l'Afrique</div>
           </div>
         </div>
       </footer>

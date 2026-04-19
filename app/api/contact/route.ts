@@ -1,24 +1,52 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { supabaseAdmin } from '@/lib/supabaseAdmin';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+const contactToEmail = process.env.CONTACT_TO_EMAIL ?? 'Senoris2026@gmail.com';
+const contactFromEmail = process.env.CONTACT_FROM_EMAIL ?? 'SENORIS <onboarding@resend.dev>';
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, message } = await req.json();
+    const { name, email, subject, message } = await req.json();
 
-    if (!name || !email || !message) {
+    if (!name || !email || !subject || !message) {
       return NextResponse.json(
         { error: 'Tous les champs sont obligatoires.' },
         { status: 400 }
       );
     }
 
+    const ip =
+      req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      req.headers.get('x-real-ip') ??
+      null;
+    const userAgent = req.headers.get('user-agent');
+
+    const { error: dbError } = await supabaseAdmin
+      .from('contact_messages')
+      .insert({
+        name,
+        email,
+        subject,
+        message,
+        ip,
+        user_agent: userAgent,
+      });
+
+    if (dbError) {
+      console.error('Supabase insert error:', dbError);
+      return NextResponse.json(
+        { error: "Impossible d'enregistrer votre message. Réessayez plus tard." },
+        { status: 500 }
+      );
+    }
+
     const { error } = await resend.emails.send({
-      from: 'SENORIS <onboarding@resend.dev>',
-      to: ['seckaita09@gmail.com'],  // ← email du compte Resend (test) — changer vers Senoris2026@gmail.com après vérification domaine
+      from: contactFromEmail,
+      to: [contactToEmail],
       replyTo: email,
-      subject: `✉️ Nouveau message de ${name} — Senoris`,
+      subject: `✉️ ${subject} — ${name} (Senoris)`,
       html: `
         <div style="font-family: 'Inter', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #fdfaf7; border-radius: 16px; overflow: hidden; border: 1px solid #e8ddd3;">
           
@@ -38,6 +66,11 @@ export async function POST(req: NextRequest) {
             <div style="background: #ffffff; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #e8ddd3;">
               <p style="color: #735d4f; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 6px; font-weight: 700;">Email</p>
               <a href="mailto:${email}" style="color: #8b5a2b; font-size: 1.05rem; font-weight: 600; text-decoration: none;">${email}</a>
+            </div>
+
+            <div style="background: #ffffff; border-radius: 12px; padding: 24px; margin-bottom: 20px; border: 1px solid #e8ddd3;">
+              <p style="color: #735d4f; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; margin: 0 0 6px; font-weight: 700;">Sujet</p>
+              <p style="color: #2b1f18; font-size: 1.05rem; font-weight: 600; margin: 0;">${subject}</p>
             </div>
 
             <div style="background: #ffffff; border-radius: 12px; padding: 24px; border: 1px solid #e8ddd3;">
@@ -66,12 +99,22 @@ export async function POST(req: NextRequest) {
     if (error) {
       console.error('Resend error:', error);
       return NextResponse.json(
-        { error: "Erreur lors de l'envoi. Réessayez plus tard." },
+        {
+          error:
+            "Message enregistré, mais l'email n'a pas pu être envoyé. Vérifiez la configuration Resend (destinataire autorisé ou domaine vérifié).",
+        },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ success: true }, { status: 200 });
+    return NextResponse.json(
+      {
+        success: true,
+        message:
+          "Merci pour votre message. L’équipe SENORIS vous répondra dans les meilleurs délais.",
+      },
+      { status: 200 }
+    );
 
   } catch (err) {
     console.error('Unexpected error:', err);
