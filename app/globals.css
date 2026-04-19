@@ -393,13 +393,18 @@ body {
   }
   
   .nav-glass .container {
-    flex-direction: column;
-    gap: 15px;
-    padding: 15px 24px;
+    flex-direction: row;
+    justify-content: center;
+    padding: 10px 24px;
+    gap: 0;
   }
   
-  .nav-glass div:last-child {
-    display: none; /* Hide complex nav on mobile for now, or simplify */
+  .desktop-nav {
+    display: none !important;
+  }
+
+  .nav-logo-img {
+    height: 90px !important;
   }
 
   .hero-wrapper {

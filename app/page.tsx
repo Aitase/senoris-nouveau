@@ -103,6 +103,7 @@ export default function Home() {
               <img
                 src="/logo-transparent.png"
                 alt="Senoris Logo"
+                className="nav-logo-img"
                 style={{
                   height: '130px',
                   width: 'auto',
