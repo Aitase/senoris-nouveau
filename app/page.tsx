@@ -4,8 +4,14 @@ import React, { useState } from 'react';
 
 export default function Home() {
   const techs = [
-    "Next.js", "Python", "React Native", "PostgreSQL",
-    "Docker", "AWS", "Kali Linux", "TypeScript"
+    { name: "Next.js", url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nextjs/nextjs-original.svg" },
+    { name: "Python", url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/python/python-original.svg" },
+    { name: "React Native", url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/react/react-original.svg" },
+    { name: "PostgreSQL", url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/postgresql/postgresql-original.svg" },
+    { name: "Docker", url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/docker/docker-original.svg" },
+    { name: "AWS", url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/amazonwebservices/amazonwebservices-original-wordmark.svg" },
+    { name: "Kali Linux", url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/kalilinux/kalilinux-original.svg" },
+    { name: "TypeScript", url: "https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/typescript/typescript-original.svg" }
   ];
 
   // --- Contact form state ---
@@ -324,8 +330,9 @@ export default function Home() {
       <div className="ticker-container">
         <div className="ticker-wrapper">
           {[...techs, ...techs].map((tech, i) => (
-            <div key={i} className="ticker-item">
-              <span>✦</span> {tech}
+            <div key={i} className="ticker-item" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <img src={tech.url} alt={tech.name} style={{ height: '24px', opacity: 0.9 }} />
+              <span style={{ fontWeight: 600 }}>{tech.name}</span>
             </div>
           ))}
         </div>
