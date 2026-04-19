@@ -4,15 +4,15 @@
   /* Warm Beige-Caramel Premium Palette */
 
   /* Backgrounds */
-  --bg-global: #fdfaf7;       /* Beige surface — global page background */
-  --bg-white: #ffffff;        /* Blanc pur — cards, nav */
-  --bg-cream: #f5eee6;        /* Beige doux — secondary blocks */
-  --bg-cream-alt: #faf5ef;    /* Crème — icon backgrounds, secondary sections */
-  --bg-nude-border: #e8ddd3;  /* Subtle border/divider tone */
+  --bg-global: #fefcfb;       /* Beige extrêmement clair — presque blanc */
+  --bg-white: #ffffff;        /* Blanc pur */
+  --bg-cream: #faf7f2;        /* Crème très léger */
+  --bg-cream-alt: #ffffff;    /* On passe sur du blanc pour plus de clarté */
+  --bg-nude-border: #f0e9e2;  /* Bordure encore plus discrète */
 
   /* Text */
-  --text-primary: #2b1f18;    /* Marron très sombre — titres */
-  --text-secondary: #735d4f;  /* Marron taupe — paragraphes */
+  --text-primary: #1a1614;    /* Presque noir pour contraste maximum */
+  --text-secondary: #5a524d;  /* Gris-brun neutre plus clair */
 
   /* Accents */
   --accent-main: #8b5a2b;     /* Ocre/Caramel — boutons principaux, icônes, chiffres */
@@ -112,7 +112,7 @@ body {
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   border-bottom: 1px solid rgba(253, 250, 247, 0.12);
-  padding: 18px 0;
+  padding: 10px 0;
   position: fixed;
   top: 0;
   left: 0;
@@ -440,4 +440,14 @@ body {
   #contact .container > div {
     flex-direction: column !important;
   }
+}
+
+/* Hover Tilt Animation */
+.hover-tilt {
+  transform-style: preserve-3d;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.hover-tilt:hover {
+  transform: rotate(-3deg) scale(1.05) !important;
 }
